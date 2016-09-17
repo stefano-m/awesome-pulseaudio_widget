@@ -45,7 +45,13 @@ local icon = {
   muted = icon_theme .. "/audio-volume-muted-symbolic" .. icon_extension
 }
 
-local address = pulse.get_address()
+local status, address = pcall(pulse.get_address)
+if not status then
+  naughty.notify({title="Error while loading PulseAudio",
+                  text=address,
+                  preset=naughty.config.presets.critical})
+  return widget
+end
 
 pulse.listen_for_signal(address, "org.PulseAudio.Core1", "NewSink")
 local watcher = ldbus.api.watch(address)
