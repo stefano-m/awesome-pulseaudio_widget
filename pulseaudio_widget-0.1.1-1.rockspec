@@ -1,8 +1,8 @@
 package = "pulseaudio_widget"
- version = "devel-1"
+ version = "0.1.1-1"
  source = {
     url = "git://github.com/stefano-m/awesome-pulseaudio_widget",
-    tag = "master"
+    tag = "v0.1.1"
  }
  description = {
     summary = "A PulseAudio widget for the Awesome Window Manager",
@@ -14,7 +14,7 @@ package = "pulseaudio_widget"
  }
  dependencies = {
    "lua >= 5.1",
-   "pulseaudio_dbus",
+   "pulseaudio_dbus >= 0.8.1, < 0.9",
  }
  supported_platforms = { "linux" }
  build = {
