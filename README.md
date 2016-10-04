@@ -32,7 +32,7 @@ This will ensure that all its dependencies are installed.
 
 ### A note about ldbus
 
-This module depens on the [`ldbus`](https://github.com/daurnimator/ldbus)
+This module depends on the [`ldbus`](https://github.com/daurnimator/ldbus)
 module that provides the low-level DBus bindings
 
     luarocks install --server=http://luarocks.org/manifests/daurnimator \
