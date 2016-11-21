@@ -91,6 +91,24 @@ Finally add some keyboard shortcuts to control the volume:
       awful.key({ }, "XF86AudioMute",  pulse.toggle_muted)
     )
 
+# Limitations
+
+This widget cannot show when headphones are plugged or unplugged.
+
+(Un)plugging headphones will result in Pulseaudio's current Sink to
+change its "active" port and issue an "ActivePortUpdated" signal.
+However, there is no way for Awesome to detect such signal because
+its DBus API can connect only to session and system buses because,
+unfortunately, pulseaudio uses peer-to-peer connections (i.e. it opens
+a specific socket owned by the current user).
+
+This is unfortunate because it's quite handy to have e.g. the muted
+speakers and unmuted headphones.
+
+That said, the widget will continue to work and update the volume and
+mute state of both. It will just not show the actual status when the
+headphones are unplugged.
+
 # Credits
 
 Although heavily modified, this program is derived from the
