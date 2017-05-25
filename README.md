@@ -1,27 +1,36 @@
-# A widget for the Awesome Window Manager to control the volume
+# A widget for the Awesome Window Manager 4.x to control the volume
 
-This widget is a wrapper around the
-[`pulseaudio_dbus`](https://luarocks.org/modules/stefano-m/pulseaudio_dbus)
-library for the Awesome Window Manager.
+A widget for the Awesome Window Manager (version 4.x) that
+uses [pulseaudio_dbus](https://github.com/stefano-m/lua-pulseaudio_dbus) to
+control your audio devices.
+
+## A note about PulseAudio, DBus and Awesome
+
+The Pulseaudio DBus interface requires clients to use peer-to-peer connection
+rather than the usual system/session buses. This means that we *cannot* use the
+Awesome DBus API that supports *only* system and session buses.
+
+The solution is to run an external client application to establish a
+peer-to-peer connection and listen to DBus signals. The output of the client is
+read by the widget that updates itself accordingly. This is done thanks
+to
+[`awful.spawn.with_line_callback`](https://awesomewm.org/apidoc/libraries/awful.spawn.html#with_line_callback).
 
 # Requirements
 
 In addition to the requirements listed in the `rockspec` file, you will need
-the [Awesome Window Manager](https://awesomewm.org)
-and PulseAudio with DBus enabled (for more information about this, see the
-[`pulseaudio_dbus`](https://luarocks.org/modules/stefano-m/pulseaudio_dbus)
-documentation).
+the [Awesome Window Manager](https://awesomewm.org) *version 4.x* and
+PulseAudio with DBus enabled.
 
-You will also need the DBus headers (`dbus.h`) installed.
-For example, Debian and Ubuntu provide the DBus headers with the `libdbus-1-dev`
-package, Fedora, RedHad and CentOS provide them with the `dbus-devel` package,
-while Arch provides them (alongside the binaries) with the `libdbus` package.
+To enable DBus in PulseAudio, ensure that the line
+
+    load-module module-dbus-protocol
+
+is present in `/etc/pulse/default.pa` or `~/.config/pulse/default.pa`
 
 # Installation
 
-## Using Luarocks
-
-Probably, the easiest way to install this widget is to use `luarocks`:
+The easiest way to install this widget is to use `luarocks`:
 
     luarocks install pulseaudio_widget
 
@@ -30,29 +39,11 @@ it system-wide
 
 This will ensure that all its dependencies are installed.
 
-### A note about ldbus
-
-This module depends on the [`ldbus`](https://github.com/daurnimator/ldbus)
-module that provides the low-level DBus bindings
-
-    luarocks install --server=http://luarocks.org/manifests/daurnimator \
-        ldbus \
-        DBUS_INCDIR=/usr/include/dbus-1.0/ \
-        DBUS_ARCH_INCDIR=/usr/lib/dbus-1.0/include
-
-As usual, you can use the `--local` option if you don't want or can't install
-it system-wide.
-
-## From source
-
-Alternatively, you can copy the `pulseaudio_widget.lua` file in your
-`~/.config/awesome` folder. You will have to install all the dependencies
-manually though (see the `rockspec` file for more information).
 
 # Configuration
 
-The widget displays volume icons that are searched in the folder defined
-by `beautiful.pulse_icon_theme` with extension `beautiful.pulse_icon_extension`.
+The widget displays volume icons that are searched in the folder defined by
+`beautiful.pulse_icon_theme` with extension `beautiful.pulse_icon_extension`.
 The default is to look into `"/usr/share/icons/Adwaita/scalable/status"` for
 icons whose extension is `".svg"`.
 
@@ -69,47 +60,45 @@ When the widget is focused:
 
 * Scroll: controls the volume
 * Left button: toggles mute
-* Right button: launches mixer (defaults to `pavucontrol`)
+* Right button: launches mixer (`mixer` field of the widget table, defaults to
+  `pavucontrol`)
 
 # Usage
+
 Add the following to your `~/.config/awesome/rc.lua`:
 
 Require the module:
 
-    -- require *after* `beautiful.init` or the theme will be inconsistent!
-    local pulse = require("pulseaudio_widget")
+``` lua
+-- require *after* `beautiful.init` or the theme will be inconsistent!
+local pulse = require("pulseaudio_widget")
+
+```
 
 Add the widget to your layout:
 
-    right_layout:add(pulse)
+``` lua
+s.mywibox:setup {
+  layout = wibox.layout.align.horizontal,
+  { -- Left widgets },
+  s.mytasklist, -- Middle widget
+  { -- Right widgets
+    pulse
+  }
+}
+```
 
 Finally add some keyboard shortcuts to control the volume:
 
-    awful.util.table.join(
-      awful.key({ }, "XF86AudioRaiseVolume", pulse.volume_up),
-      awful.key({ }, "XF86AudioLowerVolume", pulse.volume_down),
-      awful.key({ }, "XF86AudioMute",  pulse.toggle_muted)
-    )
-
-# Limitations
-
-This widget cannot show when headphones are plugged or unplugged.
-
-(Un)plugging headphones will result in Pulseaudio's current Sink to
-change its "active" port and issue an "ActivePortUpdated" signal.
-However, there is no way for Awesome to detect such signal because
-its DBus API can connect only to session and system buses because,
-unfortunately, pulseaudio uses peer-to-peer connections (i.e. it opens
-a specific socket owned by the current user).
-
-This is unfortunate because it's quite handy to have e.g. the muted
-speakers and unmuted headphones.
-
-That said, the widget will continue to work and update the volume and
-mute state of both. It will just not show the actual status when the
-headphones are unplugged.
+``` lua
+awful.util.table.join(
+  awful.key({ }, "XF86AudioRaiseVolume", pulse.volume_up),
+  awful.key({ }, "XF86AudioLowerVolume", pulse.volume_down),
+  awful.key({ }, "XF86AudioMute",  pulse.toggle_muted)
+)
+```
 
 # Credits
 
-Although heavily modified, this program is derived from the
-[Awesome Pulseaudio Widget (APW)](https://github.com/mokasin/apw).
+This program was inspired by
+the [Awesome Pulseaudio Widget (APW)](https://github.com/mokasin/apw).
