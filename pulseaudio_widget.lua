@@ -123,7 +123,7 @@ function widget:run_client()
         v, found = line:gsub("^(NewSink:%s+)(/.*%w)", "%2")
         if found ~=0 then
           self:update_sink(v)
-          local volume = self.sink:get_volume_percent()[1]
+          local volume = self.sink:is_muted() and "Muted" or self.sink:get_volume_percent()[1]
           self:update_appearance(volume)
           widget.notify(volume)
         end
@@ -157,7 +157,7 @@ function widget:init()
   local sink_path = assert(self.core:get_sinks()[1], "No sinks found")
 
   self:update_sink(sink_path)
-  local volume = self.sink:get_volume_percent()[1]
+  local volume = self.sink:is_muted() and "Muted" or self.sink:get_volume_percent()[1]
   self:update_appearance(volume)
 
   self:run_client()
