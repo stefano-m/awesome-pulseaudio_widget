@@ -75,7 +75,7 @@ function widget.notify(v)
 end
 
 function widget:update_sink(object_path)
-  self.sink = pulse.get_sink(self.connection, object_path)
+  self.sink = pulse.get_device(self.connection, object_path)
 end
 
 function widget.volume_up()

@@ -36,7 +36,7 @@ local address = pulse.get_address()
 
 local connection = pulse.get_connection(address)
 local core = pulse.get_core(connection)
-local sink = pulse.get_sink(connection, core.Sinks[1])
+local sink = pulse.get_device(connection, core.Sinks[1])
 
 -- listen on ALL objects as sinks may change
 core:ListenForSignal("org.PulseAudio.Core1.Device.VolumeUpdated", {})
@@ -70,7 +70,7 @@ core:ListenForSignal("org.PulseAudio.Core1.NewSink", {core.object_path})
 core:connect_signal(
   function (_, newsinks)
     print(string.format("NewSink: %s", newsinks[1]))
-    sink = pulse.get_sink(connection, newsinks[1])
+    sink = pulse.get_device(connection, newsinks[1])
     connect_sink(sink)
   end,
   "NewSink"
