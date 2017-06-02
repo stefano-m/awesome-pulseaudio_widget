@@ -92,9 +92,14 @@ Finally add some keyboard shortcuts to control the volume:
 
 ``` lua
 awful.util.table.join(
+  -- Audio
   awful.key({ }, "XF86AudioRaiseVolume", pulse.volume_up),
   awful.key({ }, "XF86AudioLowerVolume", pulse.volume_down),
-  awful.key({ }, "XF86AudioMute",  pulse.toggle_muted)
+  awful.key({ }, "XF86AudioMute",  pulse.toggle_muted),
+  -- Microphone
+  awful.key({"Shift"}, "XF86AudioRaiseVolume", pulse.volume_up_mic),
+  awful.key({"Shift"}, "XF86AudioLowerVolume", pulse.volume_down_mic),
+  awful.key({ }, "XF86MicMute",  pulse.toggle_muted_mic),
 )
 ```
 

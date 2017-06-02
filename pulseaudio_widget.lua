@@ -78,6 +78,18 @@ function widget:update_sink(object_path)
   self.sink = pulse.get_device(self.connection, object_path)
 end
 
+function widget:update_source(sources)
+  for _, source_path in ipairs(sources) do
+    local s = pulse.get_device(self.connection, source_path)
+    if s.Name and not s.Name:match("%.monitor$") then
+      self.source = s
+      break
+    else
+      self.source = nil
+    end
+  end
+end
+
 function widget.volume_up()
   if not widget.sink:is_muted() then
     widget.sink:volume_up()
@@ -94,6 +106,24 @@ function widget.toggle_muted()
   widget.sink:toggle_muted()
 end
 
+function widget.volume_up_mic()
+  if widget.source and not widget.source:is_muted() then
+    widget.source:volume_up()
+  end
+end
+
+function widget.volume_down_mic()
+  if widget.source and not widget.source:is_muted() then
+    widget.source:volume_down()
+  end
+end
+
+function widget.toggle_muted_mic()
+  if widget.source then
+    widget.source:toggle_muted()
+  end
+end
+
 function widget:kill_client()
   if type(self.server_pid) == "number" then
     awful.spawn("kill -TERM " .. self.server_pid)
@@ -102,30 +132,41 @@ end
 
 function widget:run_client()
 
+  local function update_after_signal(line, regex, sub, sep)
+    sep = sep or " "
+    local v, found = line:gsub(regex, sub)
+    if found ~= 0 then
+      local idx = v:find(sep)
+      local vol = v:sub(1, idx - 1)
+      local path = v:sub(idx + 1)
+      if path:find("/sink%d+$") then
+        self:update_appearance(vol)
+        self.notify(vol)
+      end
+    end
+  end
+
   local pid = awful.spawn.with_line_callback(
     [[lua -e 'require("pulseaudio_widget_client")']],
     {
       stdout = function (line)
-        local v, found, _
 
-        v, found = line:gsub("^(VolumeUpdated:%s+)(%d)", "%2")
-        if found ~= 0 then
-          self:update_appearance(v)
-          widget.notify(v)
-        end
+        update_after_signal(line, "^(VolumeUpdated:%s+)(%d+)(|)([%w/]+)", "%2 %4")
 
-        v, found = line:gsub("^(MuteUpdated:%s+)(%w)", "%2")
-        if found ~= 0 then
-          self:update_appearance(v)
-          widget.notify(v)
-        end
+        update_after_signal(line, "^(MuteUpdated:%s+)(%w+)(|)([%w/]+)", "%2 %4")
 
+        local v, found
         v, found = line:gsub("^(NewSink:%s+)(/.*%w)", "%2")
         if found ~=0 then
           self:update_sink(v)
           local volume = self.sink:is_muted() and "Muted" or self.sink:get_volume_percent()[1]
           self:update_appearance(volume)
-          widget.notify(volume)
+          self.notify(volume)
+        end
+
+        v, found = line:gsub("^(NewSource:%s+)(/.*%w)", "%2")
+        if found ~=0 then
+          self:update_source({v})
         end
       end
   })
@@ -154,8 +195,10 @@ function widget:init()
 
   self.connection = pulse.get_connection(address)
   self.core = pulse.get_core(self.connection)
-  local sink_path = assert(self.core:get_sinks()[1], "No sinks found")
 
+  self:update_source(self.core:get_sources())
+
+  local sink_path = assert(self.core:get_sinks()[1], "No sinks found")
   self:update_sink(sink_path)
   local volume = self.sink:is_muted() and "Muted" or self.sink:get_volume_percent()[1]
   self:update_appearance(volume)
