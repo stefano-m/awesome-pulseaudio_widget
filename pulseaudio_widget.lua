@@ -17,8 +17,6 @@
   This program was inspired by the
   [Awesome Pulseaudio Widget (APW)](https://github.com/mokasin/apw)
 ]]
-
-local awesome = awesome -- luacheck: ignore
 local string = string
 
 local awful = require("awful")
@@ -124,63 +122,44 @@ function widget.toggle_muted_mic()
   end
 end
 
-function widget:kill_client()
-  if type(self.server_pid) == "number" then
-    awful.spawn("kill -TERM " .. self.server_pid)
-  end
-end
-
-function widget:run_client()
-
-  local function update_after_signal(line, regex, sub, sep)
-    sep = sep or " "
-    local v, found = line:gsub(regex, sub)
-    if found ~= 0 then
-      local idx = v:find(sep)
-      local vol = v:sub(1, idx - 1)
-      local path = v:sub(idx + 1)
-      if path:find("/sink%d+$") then
-        self:update_appearance(vol)
-        self.notify(vol)
-      end
-    end
-  end
-
-  local pid = awful.spawn.with_line_callback(
-    [[lua -e 'require("pulseaudio_widget_client")']],
-    {
-      stdout = function (line)
-
-        update_after_signal(line, "^(VolumeUpdated:%s+)(%d+)(|)([%w/]+)", "%2 %4")
-
-        update_after_signal(line, "^(MuteUpdated:%s+)(%w+)(|)([%w/]+)", "%2 %4")
-
-        local v, found
-        v, found = line:gsub("^(NewSink:%s+)(/.*%w)", "%2")
-        if found ~=0 then
-          self:update_sink(v)
-          local volume = self.sink:is_muted() and "Muted" or self.sink:get_volume_percent()[1]
-          self:update_appearance(volume)
-          self.notify(volume)
-        end
-
-        v, found = line:gsub("^(NewSource:%s+)(/.*%w)", "%2")
-        if found ~=0 then
-          self:update_source({v})
-        end
-      end
-  })
-
-  self.server_pid = pid
-end
-
 widget:buttons(gears.table.join(
                  awful.button({ }, 1, widget.toggle_muted),
                  awful.button({ }, 3, function () awful.spawn(widget.mixer) end),
                  awful.button({ }, 4, widget.volume_up),
                  awful.button({ }, 5, widget.volume_down)))
 
-awesome.connect_signal("exit", function () widget:kill_client() end)
+function widget:connect_device(device)
+  if not device then
+    return
+  end
+
+  if device.signals.VolumeUpdated then
+    device:connect_signal(
+      function (this, vols)
+        -- FIXME: BaseVolume for sources (i.e. microphones) won't give the correct percentage
+        local v = math.ceil(tonumber(vols[1][1]) / this.BaseVolume * 100)
+        if this.object_path == self.sink.object_path then
+          self:update_appearance(v)
+          self.notify(v)
+        end
+      end,
+      "VolumeUpdated"
+    )
+  end
+
+  if device.signals.MuteUpdated then
+    device:connect_signal(
+      function (this, is_mute)
+        local m = is_mute[1] and "Muted" or "Unmuted"
+        if this.object_path == self.sink.object_path then
+          self:update_appearance(m)
+          self.notify(m)
+        end
+      end,
+      "MuteUpdated"
+    )
+  end
+end
 
 function widget:init()
   local status, address = pcall(pulse.get_address)
@@ -196,14 +175,39 @@ function widget:init()
   self.connection = pulse.get_connection(address)
   self.core = pulse.get_core(self.connection)
 
+  -- listen on ALL objects as sinks and sources may change
+  self.core:ListenForSignal("org.PulseAudio.Core1.Device.VolumeUpdated", {})
+  self.core:ListenForSignal("org.PulseAudio.Core1.Device.MuteUpdated", {})
+
+  self.core:ListenForSignal("org.PulseAudio.Core1.NewSink", {self.core.object_path})
+  self.core:connect_signal(
+    function (_, newsinks)
+      self:update_sink(newsinks[1])
+      self:connect_device(self.sink)
+      local volume = self.sink:is_muted() and "Muted" or self.sink:get_volume_percent()[1]
+      self:update_appearance(volume)
+    end,
+    "NewSink"
+  )
+
+  self.core:ListenForSignal("org.PulseAudio.Core1.NewSource", {self.core.object_path})
+  self.core:connect_signal(
+    function (_, newsources)
+      self:update_source(newsources)
+      self:connect_device(self.source)
+    end,
+    "NewSource"
+  )
+
   self:update_source(self.core:get_sources())
+  self:connect_device(self.source)
 
   local sink_path = assert(self.core:get_sinks()[1], "No sinks found")
   self:update_sink(sink_path)
+  self:connect_device(self.sink)
+
   local volume = self.sink:is_muted() and "Muted" or self.sink:get_volume_percent()[1]
   self:update_appearance(volume)
-
-  self:run_client()
 
   self.__index = self
 

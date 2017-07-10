@@ -4,18 +4,6 @@ A widget for the Awesome Window Manager (version 4.x) that
 uses [pulseaudio_dbus](https://github.com/stefano-m/lua-pulseaudio_dbus) to
 control your audio devices.
 
-## A note about PulseAudio, DBus and Awesome
-
-The Pulseaudio DBus interface requires clients to use peer-to-peer connection
-rather than the usual system/session buses. This means that we *cannot* use the
-Awesome DBus API that supports *only* system and session buses.
-
-The solution is to run an external client application to establish a
-peer-to-peer connection and listen to DBus signals. The output of the client is
-read by the widget that updates itself accordingly. This is done thanks
-to
-[`awful.spawn.with_line_callback`](https://awesomewm.org/apidoc/libraries/awful.spawn.html#with_line_callback).
-
 # Requirements
 
 In addition to the requirements listed in the `rockspec` file, you will need

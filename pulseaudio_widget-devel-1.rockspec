@@ -19,6 +19,5 @@ dependencies = {
 supported_platforms = { "linux" }
 build = {
   type = "builtin",
-  modules = { pulseaudio_widget = "pulseaudio_widget.lua",
-              pulseaudio_widget_client = "pulseaudio_widget_client.lua"},
+  modules = { pulseaudio_widget = "pulseaudio_widget.lua" },
 }
