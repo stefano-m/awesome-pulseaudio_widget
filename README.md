@@ -27,6 +27,33 @@ it system-wide
 
 This will ensure that all its dependencies are installed.
 
+Note that if you install with `--local` you will have to make sure that the
+`LUA_PATH` environment variable includes the local luarocks path. This can be
+achieved by `eval`ing the command `luarocks path --bin` **before** Awesome is
+started.
+
+For example, if you start Awesome from the Linux console (e.g. `xinit
+awesome`) and you use `zsh`, you can add the following lines to your
+`~/.zprofile`:
+
+``` shell
+if (( $+commands[luarocks] )); then
+    eval `luarocks path --bin`
+fi
+```
+
+If you use `bash`, you can add the following lines to your `~/.bash_profile`:
+
+``` shell
+if [[ -n "`which luarocks 2>/dev/null`" ]]; then
+    eval `luarocks path --bin`
+fi
+```
+
+If you use
+an [X Display Manager](https://en.wikipedia.org/wiki/Display_manager) you will
+need to do what explained above in your `~/.xprofile` or `~/.xinitrc`. See the
+documentation of your display manager of choice for more information.
 
 # Configuration
 
