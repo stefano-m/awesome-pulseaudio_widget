@@ -76,7 +76,7 @@ function widget:update_sink(object_path)
   self.sink = pulse.get_device(self.connection, object_path)
 end
 
-function widget:update_source(sources)
+function widget:update_sources(sources)
   for _, source_path in ipairs(sources) do
     local s = pulse.get_device(self.connection, source_path)
     if s.Name and not s.Name:match("%.monitor$") then
@@ -135,9 +135,9 @@ function widget:connect_device(device)
 
   if device.signals.VolumeUpdated then
     device:connect_signal(
-      function (this, vols)
+      function (this, volume)
         -- FIXME: BaseVolume for sources (i.e. microphones) won't give the correct percentage
-        local v = math.ceil(tonumber(vols[1][1]) / this.BaseVolume * 100)
+        local v = math.ceil(tonumber(volume[1]) / this.BaseVolume * 100)
         if this.object_path == self.sink.object_path then
           self:update_appearance(v)
           self.notify(v)
@@ -150,7 +150,7 @@ function widget:connect_device(device)
   if device.signals.MuteUpdated then
     device:connect_signal(
       function (this, is_mute)
-        local m = is_mute[1] and "Muted" or "Unmuted"
+        local m = is_mute and "Muted" or "Unmuted"
         if this.object_path == self.sink.object_path then
           self:update_appearance(m)
           self.notify(m)
@@ -181,8 +181,8 @@ function widget:init()
 
   self.core:ListenForSignal("org.PulseAudio.Core1.NewSink", {self.core.object_path})
   self.core:connect_signal(
-    function (_, newsinks)
-      self:update_sink(newsinks[1])
+    function (_, newsink)
+      self:update_sink(newsink)
       self:connect_device(self.sink)
       local volume = self.sink:is_muted() and "Muted" or self.sink:get_volume_percent()[1]
       self:update_appearance(volume)
@@ -192,14 +192,14 @@ function widget:init()
 
   self.core:ListenForSignal("org.PulseAudio.Core1.NewSource", {self.core.object_path})
   self.core:connect_signal(
-    function (_, newsources)
-      self:update_source(newsources)
+    function (_, newsource)
+      self:update_sources({newsource})
       self:connect_device(self.source)
     end,
     "NewSource"
   )
 
-  self:update_source(self.core:get_sources())
+  self:update_sources(self.core:get_sources())
   self:connect_device(self.source)
 
   local sink_path = assert(self.core:get_sinks()[1], "No sinks found")
