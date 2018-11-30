@@ -67,10 +67,16 @@ function widget:update_appearance(v)
 
 end
 
-function widget.notify(v)
-  local msg = tonumber(v) and string.format("%d%%", v) or v
-  naughty.notify({text=msg, timeout=1})
-end
+widget.notify = (function()
+	local previous = nil
+	return function(v)
+		if previous then
+			naughty.destroy(previous, naughty.notificationClosedReason.dismissedByCommand)
+		end
+		local msg = tonumber(v) and string.format("%d%%", v) or v
+		previous = naughty.notify({text=msg, timeout=1})
+	end
+end)()
 
 function widget:update_sink(object_path)
   self.sink = pulse.get_device(self.connection, object_path)
