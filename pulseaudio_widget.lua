@@ -69,12 +69,12 @@ end
 
 widget.notify = (function()
 	local previous = nil
-	return function(v)
+	return function(self, v)
 		if previous then
 			naughty.destroy(previous, naughty.notificationClosedReason.dismissedByCommand)
 		end
 		local msg = tonumber(v) and string.format("%d%%", v) or v
-		previous = naughty.notify({text=msg, timeout=1})
+		previous = naughty.notify({text=msg, timeout=self.notification_timeout})
 	end
 end)()
 
@@ -146,7 +146,7 @@ function widget:connect_device(device)
         local v = math.ceil(tonumber(volume[1]) / this.BaseVolume * 100)
         if this.object_path == self.sink.object_path then
           self:update_appearance(v)
-          self.notify(v)
+          self:notify(v)
         end
       end,
       "VolumeUpdated"
@@ -159,7 +159,7 @@ function widget:connect_device(device)
         local m = is_mute and "Muted" or "Unmuted"
         if this.object_path == self.sink.object_path then
           self:update_appearance(m)
-          self.notify(m)
+          self:notify(m)
         end
       end,
       "MuteUpdated"
@@ -177,6 +177,7 @@ function widget:init()
   end
 
   self.mixer = "pavucontrol"
+  self.notification_timeout = 1
 
   self.connection = pulse.get_connection(address)
   self.core = pulse.get_core(self.connection)
