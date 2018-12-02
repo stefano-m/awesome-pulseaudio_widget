@@ -74,7 +74,12 @@ function widget:notify(v)
     naughty.destroy(self.notification, naughty.notificationClosedReason.dismissedByCommand)
   end
 
-  self.notification = naughty.notify({text=msg, timeout=1})
+  self.notification = naughty.notify(
+    {
+      text=msg,
+      timeout=self.notification_timeout_seconds
+    }
+  )
 
 end
 
@@ -177,6 +182,7 @@ function widget:init()
   end
 
   self.mixer = "pavucontrol"
+  self.notification_timeout_seconds = 1
 
   self.connection = pulse.get_connection(address)
   self.core = pulse.get_core(self.connection)

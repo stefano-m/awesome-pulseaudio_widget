@@ -88,6 +88,8 @@ Require the module:
 -- require *after* `beautiful.init` or the theme will be inconsistent!
 local pulse = require("pulseaudio_widget")
 
+-- Optionally, change the notification timeout default of 1 second to 5.
+pulse.notification_timeout_seconds = 5
 ```
 
 Add the widget to your layout:
