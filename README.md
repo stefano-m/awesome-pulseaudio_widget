@@ -116,7 +116,7 @@ awful.util.table.join(
   -- Microphone
   awful.key({"Shift"}, "XF86AudioRaiseVolume", pulse.volume_up_mic),
   awful.key({"Shift"}, "XF86AudioLowerVolume", pulse.volume_down_mic),
-  awful.key({ }, "XF86MicMute",  pulse.toggle_muted_mic),
+  awful.key({ }, "XF86MicMute",  pulse.toggle_muted_mic)
 )
 ```
 
