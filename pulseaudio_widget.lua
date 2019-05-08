@@ -1,5 +1,5 @@
 --[[
-  Copyright 2017 Stefano Mazzucco <stefano AT curso DOT re>
+  Copyright 2017-2019 Stefano Mazzucco <stefano AT curso DOT re>
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
