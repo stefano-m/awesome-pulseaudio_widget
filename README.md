@@ -57,10 +57,10 @@ documentation of your display manager of choice for more information.
 
 # Configuration
 
-The widget displays volume icons that are searched in the folder defined by
-`beautiful.pulse_icon_theme` with extension `beautiful.pulse_icon_extension`.
-The default is to look into `"/usr/share/icons/Adwaita/scalable/status"` for
-icons whose extension is `".svg"`.
+The widget will display the audio icons defined in your GTK+ theme and it will
+resize them to fit in the available space. This means that you can switch your
+icon theme, for example using `lxappearance`, and update the widget by
+restarting AwesomWM.
 
 Specifically, you will need icons named:
 

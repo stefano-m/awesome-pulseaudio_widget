@@ -23,22 +23,32 @@ local awful = require("awful")
 local gears = require("gears")
 
 local wibox = require("wibox")
-local beautiful = require("beautiful")
 local naughty = require("naughty")
 
 local pulse = require("pulseaudio_dbus")
 
-local icon_theme = "/usr/share/icons/Adwaita/scalable/status"
-local icon_extension = ".svg"
+local lgi = require('lgi')
+local icon_theme = lgi.Gtk.IconTheme.get_default()
+local IconLookupFlags = lgi.Gtk.IconLookupFlags
 
-icon_theme = beautiful.pulse_icon_theme or icon_theme
-icon_extension = beautiful.pulse_icon_extension or icon_extension
+local icon_size = 64
+local icon_flags = {IconLookupFlags.GENERIC_FALLBACK}
+
+local function lookup_icon(name)
+  return icon_theme:lookup_icon(name, icon_size, icon_flags)
+end
+
+local function load_icon(icon)
+  if icon ~= nil then
+    return icon:load_surface()
+  end
+end
 
 local icon = {
-  high = icon_theme .. "/audio-volume-high-symbolic" .. icon_extension,
-  med = icon_theme .. "/audio-volume-medium-symbolic" .. icon_extension,
-  low = icon_theme .. "/audio-volume-low-symbolic" .. icon_extension,
-  muted = icon_theme .. "/audio-volume-muted-symbolic" .. icon_extension
+  high = lookup_icon("audio-volume-high-symbolic"),
+  med = lookup_icon("audio-volume-medium-symbolic"),
+  low = lookup_icon("audio-volume-low-symbolic"),
+  muted = lookup_icon("audio-volume-muted-symbolic"),
 }
 
 local widget = wibox.widget {
@@ -53,16 +63,16 @@ function widget:update_appearance(v)
 
   if v == "Muted" then
     msg = v
-    i = icon.muted
+    i = load_icon(icon.muted)
   else
     v = v == "Unmuted" and self.sink:get_volume_percent()[1] or tonumber(v)
     msg = string.format("%d%%", v)
     if v <= 33 then
-      i = icon.low
+      i = load_icon(icon.low)
     elseif v <= 66 then
-      i = icon.med
+      i = load_icon(icon.med)
     else
-      i = icon.high
+      i = load_icon(icon.high)
     end
   end
 
