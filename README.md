@@ -60,7 +60,7 @@ documentation of your display manager of choice for more information.
 The widget will display the audio icons defined in your GTK+ theme and it will
 resize them to fit in the available space. This means that you can switch your
 icon theme, for example using `lxappearance`, and update the widget by
-restarting AwesomWM.
+restarting AwesomeWM.
 
 Specifically, you will need icons named:
 
