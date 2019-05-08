@@ -41,7 +41,11 @@ local icon = {
   muted = icon_theme .. "/audio-volume-muted-symbolic" .. icon_extension
 }
 
-local widget = wibox.widget.imagebox()
+local widget = wibox.widget {
+  resize = true,
+  widget = wibox.widget.imagebox
+}
+
 widget.tooltip = awful.tooltip({ objects = { widget },})
 
 function widget:update_appearance(v)
