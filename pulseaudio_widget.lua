@@ -62,7 +62,7 @@ function widget:update_appearance(v)
     end
   end
 
-  self:set_image(i)
+  self.image = i
   self.tooltip:set_text(msg)
 
 end
